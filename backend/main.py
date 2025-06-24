@@ -28,38 +28,28 @@ class WeatherResponse(BaseModel):
 
 weather_id_counter = 0
 
-@app.post("/weather", response_model=WeatherResponse)
-async def create_weather_request(
-    date: Annotated[str, Form()],
-    location: Annotated[str, Form()],
-    notes: Annotated[Optional[str], Form()] = ""
-):
-    """
-    Handle weather data submission:
-    1. Receive form data (date, location, notes)
-    2. Calls WeatherStack API for the location
-    3. Stores combined data with unique ID in memory
-    4. Returns the ID to frontend
-    """
-    global weather_id_counter
-    
-    # Get weather data from WeatherStack
-    weather_data = requests.get(
-        f"https://api.weatherstack.com/current?access_key=8c605e052b2b019be106f884970f96fd&query={location}"
-    ).json()
-    
-    # Create new entry
-    weather_id_counter += 1
-    weather_id = str(weather_id_counter)
-    
-    weather_storage[weather_id] = {
-        "date": date,
-        "location": location,
-        "notes": notes,
-        "weather_data": weather_data
-    }
-    
-    return {"id": weather_id}
+@app.post("/weather")
+async def create_weather_request(request: WeatherRequest):  # Remove Form() and use Pydantic model
+    try:
+        # Your existing weather API call
+        data = requests.get(
+            f"https://api.weatherstack.com/current?access_key=8c605e052b2b019be106f884970f96fd&query={request.location}"
+        ).json()
+        
+        # Store data
+        global weather_id_counter
+        weather_id_counter += 1
+        weather_id = str(weather_id_counter)
+        weather_storage[weather_id] = {
+            "date": request.date,
+            "location": request.location,
+            "notes": request.notes,
+            "weather_data": data
+        }
+        
+        return {"id": weather_id}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))  # Simple error format
 
 @app.get("/weather/{weather_id}")
 async def get_weather_data(weather_id: str):

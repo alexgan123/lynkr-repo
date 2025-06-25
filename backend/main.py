@@ -29,7 +29,7 @@ class WeatherResponse(BaseModel):
 weather_id_counter = 0
 
 @app.post("/weather")
-async def create_weather_request(request: WeatherRequest):  # Remove Form() and use Pydantic model
+async def create_weather_request(request: WeatherRequest):
     try:
         # Your existing weather API call
         data = requests.get(
@@ -49,7 +49,7 @@ async def create_weather_request(request: WeatherRequest):  # Remove Form() and 
         
         return {"id": weather_id}
     except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))  # Simple error format
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.get("/weather/{weather_id}")
 async def get_weather_data(weather_id: str):
